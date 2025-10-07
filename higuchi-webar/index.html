@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>樋口</title>
+    <meta name="description" content="WebVR - Aframe - VR walkthrough">
+    <meta name="author" content="Kumar Ahir - VR Designer">
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://unpkg.com/aframe-animation-component@3.2.1/dist/aframe-animation-component.min.js"></script>
+    <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
+    <script>
+      AFRAME.registerComponent('hotspots',{
+        init:function(){
+            this.el.addEventListener('reloadspots',function(evt){
+              var currspotgroup=document.getElementById(evt.detail.currspots);
+              currspotgroup.setAttribute("scale","0 0 0");
+              var newspotgroup=document.getElementById(evt.detail.newspots);
+              newspotgroup.setAttribute("scale","1 1 1");
+          });
+        }
+      });
+      AFRAME.registerComponent('spot',{
+        schema:{
+          linkto:{type:"string",default:""},
+          spotgroup:{type:"string",default:""}
+        },
+        init:function(){
+          this.el.setAttribute("src","#hotspot");
+          this.el.setAttribute("look-at","#cam");
+          var data=this.data;
+          this.el.addEventListener('click',function(){
+            var sky=document.getElementById("skybox");
+            sky.setAttribute("src",data.linkto);
+            var spotcomp=document.getElementById("spots");
+            var currspots=this.parentElement.getAttribute("id");
+            spotcomp.emit('reloadspots',{newspots:data.spotgroup,currspots:currspots});
+          });
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <a-scene background="color: #ECECEC">
+      <a-assets>
+        <!-- エントランス -->
+        <img id="point1" src="<span style='color:red'>../assets/010.jpg</span>"/>
+        <!-- １F客席 -->
+        <img id="point2" src="<span style='color:red'>../assets/007.jpg</span>"/>
+        <!-- キッチン -->
+        <img id="point3" src="<span style='color:red'>../assets/008.jpg</span>"/>
+        <!-- 2F階段 -->
+        <img id="point4" src="<span style='color:red'>../assets/021.jpg</span>"/>
+        <!-- 2F客席１ -->
+        <img id="point5" src="<span style='color:red'>../assets/009.jpg</span>"/>
+        <!-- 1F客席窓際 -->
+        <img id="point6" src="<span style='color:red'>../assets/024.jpg</span>"/>
+        <!-- 1F客席中央 -->
+        <img id="point7" src="<span style='color:red'>../assets/001.jpg</span>"/>
+        <!-- 2F客席２-中央 -->
+        <img id="point8" src="<span style='color:red'>../assets/004.jpg</span>"/>
+        <!-- 2F客席３-窓際 -->
+        <img id="point9" src="<span style='color:red'>../assets/015.jpg</span>"/>
+        <!-- 1F入口ポーチ -->
+        <img id="point10" src="<span style='color:red'>../assets/005.jpg</span>"/>
+        <!-- 入口ファサード -->
+        <img id="point11" src="<span style='color:red'>../assets/020.jpg</span>"/>
+        <!-- アイコン -->
+        <img id="hotspot" src="<span style='color:red'>../assets/arrow.png</span>"/>
+      </a-assets>
+
+      <!-- 以下のシーン構成は同じ -->
+      <a-entity id="spots" hotspots>
+        <!-- （中略：既存の spot グループは変更なし） -->
+      </a-entity>
+
+      <a-sky id="skybox" src="#point1"></a-sky>
+      <a-text position="-1 1.6 -3" value="Hover red circle over arrow" color="#008080" font="kelsonsans"></a-text>
+      <a-entity id="cam" camera position="0 1.6 0" look-controls>
+        <a-entity cursor="fuse:true;fuseTimeout:2000"
+                  geometry="primitive:ring;radiusInner:0.01;radiusOuter:0.02"
+                  position="0 0 -1.8"
+                  material="shader:flat;color:#ff0000"
+                  animation__mouseenter="property:scale;to:3 3 3;startEvents:mouseenter;endEvents:mouseleave;dir:reverse;dur:2000;loop:1">
+        </a-entity>
+      </a-entity>
+    </a-scene>
+  </body>
+</html>
