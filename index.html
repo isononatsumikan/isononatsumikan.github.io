@@ -61,6 +61,53 @@
         }
       });
     </script>
+
+
+<!-- ▼ ここに追記：AudioContext解錠スクリプト -->
+<script>
+  (function () {
+    let unlocked = false;
+    function unlockAudio() {
+      if (unlocked) return;
+      unlocked = true;
+
+      // A-Frame / three.js の AudioContext を再開
+      const ctx = (AFRAME.audioContext ||
+                  (AFRAME.THREE && AFRAME.THREE.AudioContext &&
+                   AFRAME.THREE.AudioContext.getContext && AFRAME.THREE.AudioContext.getContext()));
+      if (ctx && ctx.state !== 'running' && ctx.resume) {
+        try { ctx.resume(); } catch(e) {}
+      }
+
+      // 解錠の実弾：hover音を一瞬だけ鳴らして停止
+      const hoverTarget = document.querySelector('[sound][src="#hover"]');
+      try {
+        if (hoverTarget && hoverTarget.components && hoverTarget.components.sound) {
+          hoverTarget.components.sound.playSound();
+          setTimeout(() => hoverTarget.components.sound.stopSound(), 50);
+        } else {
+          const audio = document.getElementById('hover');
+          if (audio && audio.play) {
+            audio.play().then(() => { audio.pause(); audio.currentTime = 0; }).catch(()=>{});
+          }
+        }
+      } catch(e){}
+
+      window.removeEventListener('click', unlockAudio, true);
+      window.removeEventListener('touchstart', unlockAudio, true);
+    }
+    window.addEventListener('click', unlockAudio, true);
+    window.addEventListener('touchstart', unlockAudio, true);
+  })();
+</script>
+<!-- ▲ 追記ここまで -->
+
+
+
+
+
+
+
   </head>
   <body>
     
