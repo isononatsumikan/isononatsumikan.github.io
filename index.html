@@ -62,6 +62,17 @@
       });
     </script>
 
+<!-- 画像のプリロード完了を待ってから表示（チラつき/真っ黒防止） -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const scene = document.querySelector('a-scene');
+    const assets = document.querySelector('a-assets');
+    function ready(){ scene.renderer && (scene.style.visibility='visible'); }
+    scene.style.visibility = 'hidden';
+    if (assets && assets.hasLoaded) { ready(); }
+    else { assets && assets.addEventListener('loaded', ready); }
+  });
+</script>
 
 <!-- ▼ ここに追記：AudioContext解錠スクリプト -->
 <script>
@@ -143,7 +154,7 @@
         <img id="hotspot" crossorigin="anonymous" src="https://isononatsumikan.github.io/assets/arrow.png?v=20251008_02">
         
         <!-- サウンド -->
-        <audio id="hover" src="https://isononatsumikan.github.io/assets/hover.mp3?v=20251008_02" preload="auto"></audio>
+        <audio id="hover" src="https://isononatsumikan.github.io/assets/hover.mp3?v=20251008_02" preload="auto" playsinline></audio>
       
       </a-assets>
       
