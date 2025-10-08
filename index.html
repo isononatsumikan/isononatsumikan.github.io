@@ -1,179 +1,221 @@
 <!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>WebAR ギャラリー</title>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>樋口</title>
+    <meta name="description" content="WebVR - Aframe - VR walkthrough">
+    <meta name="author" content="Kumar Ahir - VR Designer">
 
-  <!-- Apple/建築系のトーンに合う軽量サンセリフ（可変フォント）＋ 日本語はNoto Sans JPのLight系 -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200..600&family=Noto+Sans+JP:wght@200;300;400&display=swap" rel="stylesheet">
+    <!-- 変更：キャッシュバスト用のバージョン -->
+<script>window.ASSET_VER = '20251008_01';</script>
 
-  <style>
-    /* =========================
-       Theme (有彩グレー基調)
-    ========================== */
-    :root{
-      --bg1:#d9dce3;           /* blue-leaning light gray */
-      --bg2:#bdc3ce;           /* stone gray */
-      --panel: rgba(255,255,255,0.55);
-      --panel-bd: rgba(255,255,255,0.30);
+     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://unpkg.com/aframe-animation-component@3.2.1/dist/aframe-animation-component.min.js"></script>
+    <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
+    <script>
+      AFRAME.registerComponent('hotspots',{
+        init:function(){
+            this.el.addEventListener('reloadspots',function(evt){
+            
+            //get the entire current spot group and scale it to 0
+            var currspotgroup=document.getElementById(evt.detail.currspots);
+            currspotgroup.setAttribute("scale","0 0 0");
+            
+            //get the entire new spot group and scale it to 1
+            var newspotgroup=document.getElementById(evt.detail.newspots);
+            newspotgroup.setAttribute("scale","1 1 1");
+          });
+        }
+      });
+      AFRAME.registerComponent('spot',{
+        schema:{
+          linkto:{type:"string",default:""},
+          spotgroup:{type:"string",default:""}
+        },
+        init:function(){
+          
+          //add image source of hotspot icon
+          this.el.setAttribute("src","#hotspot");
+          //make the icon look at the camera all the time
+          this.el.setAttribute("look-at","#cam");
+          
 
-      --text:#17181c;
-      --text-sub:#4b505a;
-
-      --accent-1:#56c7c0;      /* turquoise gray */
-      --accent-2:#7f8ecf;      /* lavender gray */
-
-      --btn-1:#7a8696;         /* desaturated blue-gray */
-      --btn-2:#909dad;
-      --btn-1-h:#8a97a8;
-      --btn-2-h:#a6b3c2;
-
-      --radius:14px;           /* 角の丸みを控えめに */
-      --shadow-lg:0 10px 32px rgba(0,0,0,.14);
-      --shadow-sm:0 2px 8px rgba(0,0,0,.10);
-      --focus:#7aa7ff;
-    }
-
-    /* =========================
-       Base
-    ========================== */
-    html,body{height:100%; margin:0}
-    body{
-      font-family: "Inter", "Noto Sans JP", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      font-weight: 300; /* 全体を細めに */
-      font-variation-settings: "wght" 300;
-      color:var(--text);
-      background: linear-gradient(142deg,var(--bg1),var(--bg2));
-      display:grid; place-items:center;
-      -webkit-font-smoothing: antialiased;
-      text-rendering: optimizeLegibility;
-      letter-spacing: .01em;
-      overflow:hidden;
-      position:relative;
-    }
-    /* 微細ノイズで紙質感 */
-    body::before{
-      content:""; position:absolute; inset:0; pointer-events:none;
-      background: repeating-linear-gradient(0deg, rgba(255,255,255,.02) 0px, rgba(0,0,0,.02) 1px);
-      opacity:.55;
-    }
-
-    /* =========================
-       Card / Container
-    ========================== */
-    .container{
-      width:min(680px,92vw);
-      text-align:center;
-      background:var(--panel);
-      border:1px solid var(--panel-bd);
-      border-radius:calc(var(--radius) + 6px);
-      backdrop-filter: blur(12px) saturate(115%);
-      box-shadow: var(--shadow-lg);
-      padding: 2.2rem 2.6rem;
-      animation:fadeIn .7s ease both;
-    }
-
-    /* =========================
-       Title（さらに小さく・繊細に）
-       Apple/プロポーザル系の軽さを意識
-    ========================== */
-    h1{
-      margin:0 0 1.6rem;
-      font-weight: 400;                 /* 見出しも細め */
-      font-variation-settings: "wght" 400;
-      font-size: 1.28rem;               /* さらに小さく */
-      line-height: 1.25;
-      letter-spacing: .12em;            /* 上品なトラッキング */
-      text-transform: uppercase;        /* 英文風の設え（日本語もスタイリッシュに） */
-      background: linear-gradient(120deg,var(--accent-1),var(--accent-2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      filter: drop-shadow(0 1px 0 rgba(255,255,255,.35));
-      position: relative;
-    }
-    /* 細いガイドラインを下に（製図的なニュアンス） */
-    h1::after{
-      content:"";
-      position:absolute; left:50%; transform:translateX(-50%);
-      bottom:-10px; width:64%; height:1px;
-      background: linear-gradient(90deg,transparent,var(--accent-2),transparent);
-      opacity:.65; border-radius:2px;
-    }
-
-    /* =========================
-       Buttons（シャープな矩形＋細い字）
-    ========================== */
-    .buttons{
-      display:flex; flex-direction:column; gap:12px; align-items:center; margin-top:1.6rem;
-    }
-    a.button{
-      display:inline-flex; align-items:center; justify-content:center;
-      width:min(360px,78vw); min-height:44px;
-      padding:.7rem 1rem;
-      color:#fff; text-decoration:none;
-      font-weight: 400; font-variation-settings:"wght" 400; /* 細め */
-      letter-spacing:.04em;
-      background: linear-gradient(180deg,var(--btn-2),var(--btn-1));
-      border:1px solid rgba(255,255,255,.28);
-      border-radius:10px;
-      box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,.22);
-      transition: transform .2s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease;
-    }
-    a.button:hover{
-      background: linear-gradient(180deg,var(--btn-2-h),var(--btn-1-h));
-      transform: translateY(-1px);
-      box-shadow: 0 6px 18px rgba(0,0,0,.18), 0 0 0 2px rgba(122,167,255,.15);
-      border-color: rgba(255,255,255,.40);
-    }
-    a.button:active{ transform: translateY(0); box-shadow: inset 0 2px 5px rgba(0,0,0,.22); }
-    a.button:focus-visible{
-      outline:none;
-      box-shadow: 0 0 0 3px rgba(122,167,255,.35);
-    }
-
-    /* 副題/説明を入れる場合のスタイル（現状未使用） */
-    .sub{
-      margin-top:.25rem; color:var(--text-sub);
-      font-size:.86rem; letter-spacing:.02em;
-    }
-
-    /* =========================
-       Responsive
-    ========================== */
-    @media (max-width:600px){
-      .container{ padding: 1.6rem 1.4rem; border-radius: calc(var(--radius) + 2px); }
-      h1{ font-size: 1.08rem; letter-spacing:.10em; }
-      h1::after{ width:72%; bottom:-9px; }
-      a.button{ width:100%; min-height:42px; }
-    }
-
-    @keyframes fadeIn{
-      from{opacity:0; transform:translateY(8px)}
-      to{opacity:1; transform:translateY(0)}
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>ラザニア·ラザニヤ 360°</h1>
-    <div class="buttons">
-      <a class="button" href="higuchi-webar/">樋口 / 大手門</a>
-      <a class="button" href="lasagna-omiya-webar/">ラザニア·ラザニヤ / 大宮</a>
-    </div>
-  </div>
-</body>
-</html>
+          //   - on: mouseenter … 重なった瞬間に1回だけ再生
+          //   - positional: false … UI効果音としてスピーカー中央から鳴る
+          //   - volume: 適宜調整（0.0 - 1.0）
+          this.el.setAttribute('sound', 'src: #hover; on: mouseenter; positional: false; volume: 0.8');
 
 
-
-
-
-
-
-
-
-
-
-  
+          var data=this.data;
+          
+          this.el.addEventListener('click',function(){
+            //set the skybox source to the new image as per the spot
+            var sky=document.getElementById("skybox");
+            sky.setAttribute("src",data.linkto);
+            
+            var spotcomp=document.getElementById("spots");
+            var currspots=this.parentElement.getAttribute("id");
+            //create event for spots component to change the spots data
+            spotcomp.emit('reloadspots',{newspots:data.spotgroup,currspots:currspots});
+          });
+        }
+      });
+    </script>
+  </head>
+  <body>
+    
+    
+    
+    <a-scene background="color: #ECECEC">
    
+      
+      <a-assets>
+        <!-- エントランス -->
+        <img id="point1"  crossorigin="anonymous" src={"https://isononatsumikan.github.io/assets/010.jpg?v=" + window.ASSET_VER}>
+        <!-- １F客席 -->
+        <img id="point2"  crossorigin="anonymous" src={"https://isononatsumikan.github.io/assets/007.jpg?v=" + window.ASSET_VER}>
+        <!-- キッチン -->
+        <img id="point3"  crossorigin="anonymous" src={"https://isononatsumikan.github.io/assets/008.jpg?v=" + window.ASSET_VER}>
+        <!-- 2F階段 -->
+        <img id="point4"  crossorigin="anonymous" src={"https://isononatsumikan.github.io/assets/021.jpg?v=" + window.ASSET_VER}>
+        <!-- 2F客席１ -->
+        <img id="point5"  crossorigin="anonymous" src={"https://isononatsumikan.github.io/assets/009.jpg?v=" + window.ASSET_VER}>
+        <!-- 1F客席窓際 -->
+        <img id="point6"  crossorigin="anonymous" src={"https://isononatsumikan.github.io/assets/024.jpg?v=" + window.ASSET_VER}>
+        <!-- 1F客席中央 -->
+        <img id="point7"  crossorigin="anonymous" src={"https://isononatsumikan.github.io/assets/001.jpg?v=" + window.ASSET_VER}>
+        <!-- 2F客席２-中央 -->
+        <img id="point8"  crossorigin="anonymous" src={"https://isononatsumikan.github.io/assets/004.jpg?v=" + window.ASSET_VER}>
+        <!-- 2F客席３-窓際 -->
+        <img id="point9"  crossorigin="anonymous" src={"https://isononatsumikan.github.io/assets/015.jpg?v=" + window.ASSET_VER}>
+        <!-- 1F入口ポーチ -->
+        <img id="point10" crossorigin="anonymous" src={"https://isononatsumikan.github.io/assets/005.jpg?v=" + window.ASSET_VER}>
+        <!-- 入口ファサード -->
+        <img id="point11" crossorigin="anonymous" src={"https://isononatsumikan.github.io/assets/020.jpg?v=" + window.ASSET_VER}>
+        <!-- アイコン -->
+        <img id="hotspot" crossorigin="anonymous" src={"https://isononatsumikan.github.io/assets/arrow.png?v=" + window.ASSET_VER}>
+        
+        <!-- サウンド -->
+        <audio id="hover" src={"https://isononatsumikan.github.io/assets/hover.mp3?v=" + window.ASSET_VER} preload="auto"></audio>
+      
+      </a-assets>
+      
+      
+      <a-entity id="spots" hotspots>
+        
+        <!-- エントランス　point1-->
+        <a-entity id="group-point1">
+          <!-- １F客席へ-->
+          <a-image spot="linkto:#point2;spotgroup:group-point2" position="-4 -1 0"></a-image>
+          <!-- キッチンへ-->
+          <a-image spot="linkto:#point3;spotgroup:group-point3" position="0 -0.5 4"></a-image>
+          <!-- 2Fへ-->
+          <a-image spot="linkto:#point4;spotgroup:group-point4" position="-2.3 2 -4"></a-image>
+          <!-- 入口ポーチへ-->
+          <a-image spot="linkto:#point10;spotgroup:group-point10" position="0 -1 -2"></a-image>         
+        </a-entity>
+        
+        <!-- １F客席　point2-->
+        <a-entity id="group-point2" scale="0 0 0">
+          <!-- エントランスに戻る -->
+          <a-image spot="linkto:#point1;spotgroup:group-point1" position="3 -1 0"></a-image>
+          <!-- キッチンへ-->
+          <a-image spot="linkto:#point3;spotgroup:group-point3" position="1.5 1 3.5"></a-image>
+          <!-- 客席窓際へ-->
+          <a-image spot="linkto:#point6;spotgroup:group-point6" position="-0.2 -1 -2.5"></a-image>
+          <!-- 客席中央へ-->
+          <a-image spot="linkto:#point7;spotgroup:group-point7" position="-3 -1 0.5"></a-image>
+        </a-entity>
+        
+        <!-- キッチン　point3-->
+        <a-entity id="group-point3" scale="0 0 0">
+          <!-- エントランスに戻る-->
+          <a-image spot="linkto:#point1;spotgroup:group-point1" position="-0.2 0 -3"></a-image>
+          <!-- 2Fへ-->
+          <a-image spot="linkto:#point4;spotgroup:group-point4" position="-1.3 2 -4"></a-image>
+        </a-entity>
+        
+        <!-- 2F階段　point4-->
+        <a-entity id="group-point4" scale="0 0 0">
+          <!-- 2F客席へ-->
+          <a-image spot="linkto:#point5;spotgroup:group-point5" position="-0.6 0 3"></a-image>
+          <!-- 1Fへ-->
+          <a-image spot="linkto:#point1;spotgroup:group-point1" position="-1.8 -1 0"></a-image>
+        </a-entity>
+        
+        <!-- 2F客席１　point5-->
+        <a-entity id="group-point5" scale="0 0 0">
+          <!-- 2F客席２へ-->
+          <a-image spot="linkto:#point8;spotgroup:group-point8" position="-2 0 0"></a-image>
+          <!-- 階段へ-->
+          <a-image spot="linkto:#point4;spotgroup:group-point4" position="0.5 0 -3"></a-image>
+        </a-entity>
+        
+        
+      　<!-- 1F客席窓際　point6-->
+        <a-entity id="group-point6" scale="0 0 0">
+       　　<!-- １F客席へ戻る-->
+          <a-image spot="linkto:#point2;spotgroup:group-point2" position="0.2 -1 3"></a-image>
+        </a-entity>
+        
+        <!-- 1F客席中央　point7-->
+        <a-entity id="group-point7" scale="0 0 0">
+       　　<!-- １F客席へ戻る-->
+          <a-image spot="linkto:#point2;spotgroup:group-point2" position="3 -1 -0.3"></a-image>
+        </a-entity>
+        
+        <!-- 2F客席中央2　point8-->
+        <a-entity id="group-point8" scale="0 0 0">
+       　　<!-- 2F客席３-窓際へ -->
+          <a-image spot="linkto:#point9;spotgroup:group-point9" position="0 0 -2"></a-image>
+          <!-- 2F客席1へ-->
+          <a-image spot="linkto:#point5;spotgroup:group-point5" position="3 0 0.7"></a-image>
+        </a-entity>  
+        
+        <!-- 2F客席３-窓際　point9-->
+        <a-entity id="group-point9" scale="0 0 0">
+       　　<!-- 2F客席２へ -->
+          <a-image spot="linkto:#point8;spotgroup:group-point8" position="0 0 2"></a-image>
+        </a-entity> 
+        
+        <!-- 入口ポーチ　point10-->
+        <a-entity id="group-point10" scale="0 0 0">
+          <!-- エントランスに戻る -->
+          <a-image spot="linkto:#point1;spotgroup:group-point1" position="-0.2 0 2"></a-image>
+          <!-- 入口ファサードへ -->
+          <a-image spot="linkto:#point11;spotgroup:group-point11" position="0.2 0 -1.8"></a-image>
+        </a-entity>
+        
+        <!-- 入口ファサード　point11-->
+        <a-entity id="group-point11" scale="0 0 0">
+          <!-- 入口ポーチに戻る -->
+          <a-image spot="linkto:#point10;spotgroup:group-point10" position="-0.2 0 2"></a-image>
+        </a-entity>
+        
+      </a-entity>
+      
+      
+      <!-- デバッグ用：今このHTMLが新しいか即判定できる帯 -->
+      <div style="position:fixed;left:0;right:0;bottom:0;background:#222;color:#fff;padding:.4rem .8rem;font:12px/1.2 sans-serif;opacity:.85;z-index:99999">
+      build: <script>document.write(window.ASSET_VER)</script> /
+       time: <script>document.write(new Date().toLocaleString())</script>
+      </div>
+      
+      
+      <!-- 変更：半径拡大で“真っ白”見えを回避しやすく -->
+      <a-sky id="skybox" radius="5000" src="#point1"></a-sky>
+      
+       <a-text position="-1 1.6 -3" value="Hover red circle over arrow" color="#008080" font="kelsonsans"></a-text>
+      
+      <a-entity id="cam" camera position="0 1.6 0" look-controls>
+        <a-entity cursor="fuse:true;fuseTimeout:2000"
+                  geometry="primitive:ring;radiusInner:0.01;radiusOuter:0.02"
+                  position="0 0 -1.8"
+                  material="shader:flat;color:#ff0000"
+                  animation__mouseenter="property:scale;to:3 3 3;startEvents:mouseenter;endEvents:mouseleave;dir:reverse;dur:2000;loop:1">
+        </a-entity>
+      </a-entity>
+      
+    </a-scene>
+  </body>
+</html>
